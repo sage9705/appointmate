@@ -1,6 +1,8 @@
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QCalendarWidget, QLabel, QMessageBox
+# appointmate/ui/main_window.py
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QCalendarWidget, QLabel, QMessageBox, QHBoxLayout
 from appointmate.utils.appointment_manager import AppointmentManager
 from appointmate.ui.appointment_dialog import AppointmentDialog
+from appointmate.ui.search_dialog import SearchDialog
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -19,9 +21,16 @@ class MainWindow(QMainWindow):
         self.appointment_label = QLabel("No appointment selected")
         layout.addWidget(self.appointment_label)
 
+        button_layout = QHBoxLayout()
         self.add_button = QPushButton("Add Appointment")
         self.add_button.clicked.connect(self.add_appointment)
-        layout.addWidget(self.add_button)
+        button_layout.addWidget(self.add_button)
+
+        self.search_button = QPushButton("Search Appointments")
+        self.search_button.clicked.connect(self.search_appointments)
+        button_layout.addWidget(self.search_button)
+
+        layout.addLayout(button_layout)
 
         central_widget = QWidget()
         central_widget.setLayout(layout)
@@ -50,3 +59,8 @@ class MainWindow(QMainWindow):
             display_text = "No appointments on this date"
         
         self.appointment_label.setText(display_text)
+    
+    def search_appointments(self):
+        appointments = self.appointment_manager.get_all_appointments()
+        dialog = SearchDialog(appointments, self)
+        dialog.exec_()
