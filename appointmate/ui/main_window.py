@@ -7,7 +7,7 @@ from appointmate.utils.appointment_manager import AppointmentManager
 from appointmate.ui.appointment_dialog import AppointmentDialog
 from appointmate.ui.search_dialog import SearchDialog
 from appointmate.ui.edit_appointment_dialog import EditAppointmentDialog
-from ...config import APPOINTMENTS_FILE, ENCRYPTION_KEY
+from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
 
 class MainWindow(QMainWindow):
     def __init__(self):

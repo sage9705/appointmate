@@ -2,7 +2,7 @@ import json
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 import os
-from ...config import APPOINTMENTS_FILE, ENCRYPTION_KEY
+from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
 
 class AppointmentManager:
     def __init__(self):
