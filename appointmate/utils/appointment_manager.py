@@ -5,9 +5,10 @@ import os
 from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
 
 class AppointmentManager:
-    def __init__(self):
-        self.file_path = APPOINTMENTS_FILE
-        self.fernet = Fernet(ENCRYPTION_KEY.encode())
+    def __init__(self, file_path=None, encryption_key=None):
+        from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
+        self.file_path = file_path or APPOINTMENTS_FILE
+        self.fernet = Fernet((encryption_key or ENCRYPTION_KEY).encode())
 
     def load_appointments(self):
         try:

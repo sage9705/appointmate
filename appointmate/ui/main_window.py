@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("AppointMate")
         self.setMinimumSize(900, 700)
 
-        self.appointment_manager = AppointmentManager(APPOINTMENTS_FILE, ENCRYPTION_KEY)
+        self.appointment_manager = AppointmentManager()
 
         self.create_ui()
         self.create_menu()
