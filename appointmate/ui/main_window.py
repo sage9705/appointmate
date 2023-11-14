@@ -1,89 +1,90 @@
-from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QWidget, QPushButton, 
-                             QCalendarWidget, QLabel, QMessageBox, QHBoxLayout, 
-                             QMenu, QAction, QListWidget, QInputDialog, QStyle)
-from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, 
+                             QCalendarWidget, QLabel, QMessageBox, QListWidget, QInputDialog, 
+                             QStyle, QStyleFactory, QFrame, QSplitter)
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon, QFont
 from appointmate.utils.appointment_manager import AppointmentManager
-from appointmate.ui.appointment_dialog import AppointmentDialog
-from appointmate.ui.search_dialog import SearchDialog
-from appointmate.ui.edit_appointment_dialog import EditAppointmentDialog
+from .appointment_dialog import AppointmentDialog
+from .search_dialog import SearchDialog
+from .edit_appointment_dialog import EditAppointmentDialog
 from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AppointMate")
-        self.setMinimumSize(900, 700)
-
+        self.setMinimumSize(1000, 600)
         self.appointment_manager = AppointmentManager()
-
         self.create_ui()
         self.create_menu()
         self.setup_notification_timer()
         self.apply_stylesheet()
 
     def create_ui(self):
-        layout = QVBoxLayout()
-
+        main_layout = QHBoxLayout()
+        
+        # Left side: Calendar and buttons
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        
         self.calendar = QCalendarWidget()
+        self.calendar.setGridVisible(True)
         self.calendar.selectionChanged.connect(self.update_appointment_display)
-        layout.addWidget(self.calendar)
-
-        self.appointment_list = QListWidget()
-        self.appointment_list.itemDoubleClicked.connect(self.edit_appointment)
-        layout.addWidget(self.appointment_list)
-
+        left_layout.addWidget(self.calendar)
+        
         button_layout = QHBoxLayout()
-        self.add_button = QPushButton("Add Appointment")
-        self.add_button.clicked.connect(self.add_appointment)
-        self.add_button.setIcon(self.style().standardIcon(QStyle.SP_FileDialogNewFolder))
+        self.add_button = self.create_button("Add", "plus.png", self.add_appointment)
+        self.search_button = self.create_button("Search", "search.png", self.search_appointments)
+        self.delete_button = self.create_button("Delete", "trash.png", self.delete_appointment)
+        
         button_layout.addWidget(self.add_button)
-
-        self.search_button = QPushButton("Search Appointments")
-        self.search_button.clicked.connect(self.search_appointments)
-        self.search_button.setIcon(self.style().standardIcon(QStyle.SP_FileDialogContentsView))
         button_layout.addWidget(self.search_button)
-
-        self.delete_button = QPushButton("Delete Appointment")
-        self.delete_button.clicked.connect(self.delete_appointment)
-        self.delete_button.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
         button_layout.addWidget(self.delete_button)
-
-        layout.addLayout(button_layout)
-
+        left_layout.addLayout(button_layout)
+        
+        # Right side: Appointment list
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        
+        self.date_label = QLabel()
+        self.date_label.setAlignment(Qt.AlignCenter)
+        self.date_label.setFont(QFont("Arial", 14, QFont.Bold))
+        right_layout.addWidget(self.date_label)
+        
+        self.appointment_list = QListWidget()
+        self.appointment_list.setAlternatingRowColors(True)
+        self.appointment_list.itemDoubleClicked.connect(self.edit_appointment)
+        right_layout.addWidget(self.appointment_list)
+        
+        # Add left and right widgets to main layout
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(left_widget)
+        splitter.addWidget(right_widget)
+        splitter.setSizes([400, 600])
+        
+        main_layout.addWidget(splitter)
+        
         central_widget = QWidget()
-        central_widget.setLayout(layout)
+        central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
-    def create_menu(self):
-        menu_bar = self.menuBar()
-        
-        appointments_menu = menu_bar.addMenu("Appointments")
-        
-        pending_action = QAction("View Pending", self)
-        pending_action.triggered.connect(self.view_pending_appointments)
-        appointments_menu.addAction(pending_action)
-        
-        past_action = QAction("View Past", self)
-        past_action.triggered.connect(self.view_past_appointments)
-        appointments_menu.addAction(past_action)
-        
-        today_action = QAction("View Today's", self)
-        today_action.triggered.connect(self.view_today_appointments)
-        appointments_menu.addAction(today_action)
-
-    def setup_notification_timer(self):
-        self.notification_timer = QTimer(self)
-        self.notification_timer.timeout.connect(self.check_approaching_appointments)
-        self.notification_timer.start(60000)  # Check every minute
+    def create_button(self, text, icon_name, connection):
+        button = QPushButton(text)
+        button.setIcon(QIcon(f"resources/icons/{icon_name}"))
+        button.setIconSize(QSize(24, 24))
+        button.clicked.connect(connection)
+        return button
 
     def update_appointment_display(self):
         self.appointment_list.clear()
-        date = self.calendar.selectedDate().toString("yyyy-MM-dd")
-        appointments = self.appointment_manager.get_appointments_by_date(date)
+        date = self.calendar.selectedDate()
+        self.date_label.setText(date.toString("MMMM d, yyyy"))
+        appointments = self.appointment_manager.get_appointments_by_date(date.toString("yyyy-MM-dd"))
         
         for app_id, app in appointments.items():
-            self.appointment_list.addItem(f"{app['time']} - {app['name']}: {app['reason']} (ID: {app_id})")
+            item = QListWidget.Item(f"{app['time']} - {app['name']}: {app['reason']}")
+            item.setData(Qt.UserRole, app_id)
+            self.appointment_list.addItem(item)
 
     def add_appointment(self):
         dialog = AppointmentDialog(self)
@@ -157,5 +158,6 @@ class MainWindow(QMainWindow):
                                     f"You have an appointment with {app['name']} at {app['time']} for {app['reason']}")
 
     def apply_stylesheet(self):
+        self.setStyle(QStyleFactory.create("Fusion"))
         with open("resources/style.css", "r") as f:
             self.setStyleSheet(f.read())
