@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, 
                              QCalendarWidget, QLabel, QMessageBox, QListWidget, QInputDialog, 
-                             QStyle, QStyleFactory, QFrame, QSplitter)
-from PyQt5.QtCore import Qt, QSize
+                             QStyle, QStyleFactory, QFrame, QSplitter, QMenu, QAction)
+from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5.QtGui import QIcon, QFont
 from appointmate.utils.appointment_manager import AppointmentManager
 from .appointment_dialog import AppointmentDialog
@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1000, 600)
         self.appointment_manager = AppointmentManager()
         self.create_ui()
-        self.create_menu()
+        self.create_menu_bar()
         self.setup_notification_timer()
         self.apply_stylesheet()
 
@@ -75,6 +75,28 @@ class MainWindow(QMainWindow):
         button.clicked.connect(connection)
         return button
 
+    def create_menu_bar(self):
+        menu_bar = self.menuBar()
+        
+        appointments_menu = menu_bar.addMenu("Appointments")
+        
+        pending_action = QAction("View Pending", self)
+        pending_action.triggered.connect(self.view_pending_appointments)
+        appointments_menu.addAction(pending_action)
+        
+        past_action = QAction("View Past", self)
+        past_action.triggered.connect(self.view_past_appointments)
+        appointments_menu.addAction(past_action)
+        
+        today_action = QAction("View Today's", self)
+        today_action.triggered.connect(self.view_today_appointments)
+        appointments_menu.addAction(today_action)
+
+    def setup_notification_timer(self):
+        self.notification_timer = QTimer(self)
+        self.notification_timer.timeout.connect(self.check_approaching_appointments)
+        self.notification_timer.start(60000)  # Check every minute
+
     def update_appointment_display(self):
         self.appointment_list.clear()
         date = self.calendar.selectedDate()
@@ -100,15 +122,13 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Invalid Input", "Please ensure all fields are filled correctly.")
 
     def search_appointments(self):
-        query, ok = QInputDialog.getText(self, "Search Appointments", "Enter search term:")
-        if ok and query:
-            appointments = self.appointment_manager.search_appointments(query)
-            self.display_appointments(appointments, f"Search Results for '{query}'")
+        dialog = SearchDialog(self.appointment_manager, self)
+        dialog.exec_()
 
     def delete_appointment(self):
         current_item = self.appointment_list.currentItem()
         if current_item:
-            app_id = current_item.text().split("(ID: ")[-1][:-1]
+            app_id = current_item.data(Qt.UserRole)
             reply = QMessageBox.question(self, 'Delete Appointment', 
                                          'Are you sure you want to delete this appointment?',
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -122,7 +142,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "No Selection", "Please select an appointment to delete.")
 
     def edit_appointment(self, item):
-        app_id = item.text().split("(ID: ")[-1][:-1]
+        app_id = item.data(Qt.UserRole)
         appointment_data = self.appointment_manager.get_appointment(app_id)
         if appointment_data:
             dialog = EditAppointmentDialog(appointment_data, self)
@@ -148,7 +168,7 @@ class MainWindow(QMainWindow):
         dialog = QListWidget(self)
         dialog.setWindowTitle(title)
         for app_id, app in appointments.items():
-            dialog.addItem(f"{app['date']} {app['time']} - {app['name']}: {app['reason']} (ID: {app_id})")
+            dialog.addItem(f"{app['date']} {app['time']} - {app['name']}: {app['reason']}")
         dialog.show()
 
     def check_approaching_appointments(self):
