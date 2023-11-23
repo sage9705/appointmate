@@ -1,14 +1,13 @@
 import json
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from datetime import datetime, timedelta
 import os
 from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
 
 class AppointmentManager:
-    def __init__(self, file_path=None, encryption_key=None):
-        from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
-        self.file_path = file_path or APPOINTMENTS_FILE
-        self.fernet = Fernet((encryption_key or ENCRYPTION_KEY).encode())
+    def __init__(self):
+        self.file_path = APPOINTMENTS_FILE
+        self.fernet = Fernet(ENCRYPTION_KEY.encode())
 
     def load_appointments(self):
         try:
@@ -16,8 +15,12 @@ class AppointmentManager:
                 return {}
             with open(self.file_path, 'rb') as file:
                 encrypted_data = file.read()
-                decrypted_data = self.fernet.decrypt(encrypted_data)
-                return json.loads(decrypted_data)
+                try:
+                    decrypted_data = self.fernet.decrypt(encrypted_data)
+                    return json.loads(decrypted_data)
+                except InvalidToken:
+                    print("Warning: Unable to decrypt the appointments file. Starting with an empty appointment list.")
+                    return {}
         except (IOError, json.JSONDecodeError, ValueError) as e:
             print(f"Error loading appointments: {str(e)}")
             return {}
@@ -60,6 +63,12 @@ class AppointmentManager:
     def get_all_appointments(self):
         return self.load_appointments()
 
+    def get_appointments_by_date(self, date):
+        return {
+            id: app for id, app in self.get_all_appointments().items()
+            if app['date'] == date
+        }
+
     def get_pending_appointments(self):
         today = datetime.now().date()
         return {id: app for id, app in self.get_all_appointments().items() 
@@ -84,38 +93,6 @@ class AppointmentManager:
                 approaching[id] = app
         return approaching
 
-    def search_appointments(self, query):
-        all_appointments = self.get_all_appointments()
-        return {
-            id: app for id, app in all_appointments.items()
-            if query.lower() in app['name'].lower() or
-               query.lower() in app['reason'].lower() or
-               query in app['date'] or
-               query in app['time']
-        }
-
-    def get_appointments_by_date(self, date):
-        return {
-            id: app for id, app in self.get_all_appointments().items()
-            if app['date'] == date
-        }
-
-    def get_appointments_by_date_range(self, start_date, end_date):
-        start = datetime.strptime(start_date, "%Y-%m-%d").date()
-        end = datetime.strptime(end_date, "%Y-%m-%d").date()
-        return {
-            id: app for id, app in self.get_all_appointments().items()
-            if start <= datetime.strptime(app['date'], "%Y-%m-%d").date() <= end
-        }
-
     def validate_appointment(self, appointment):
         required_fields = ['name', 'reason', 'date', 'time']
-        for field in required_fields:
-            if field not in appointment or not appointment[field]:
-                return False
-        try:
-            datetime.strptime(appointment['date'], "%Y-%m-%d")
-            datetime.strptime(appointment['time'], "%I:%M %p")
-        except ValueError:
-            return False
-        return True
+        return all(field in appointment and appointment[field] for field in required_fields)

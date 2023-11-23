@@ -1,10 +1,9 @@
-import os
 import sys
+import os
 from PyQt5.QtWidgets import QApplication
 from appointmate.ui.main_window import MainWindow
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from appointmate.ui.main_window import MainWindow
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 
 def main():
     app = QApplication(sys.argv)

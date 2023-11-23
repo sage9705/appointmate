@@ -1,13 +1,12 @@
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, 
                              QCalendarWidget, QLabel, QMessageBox, QListWidget, QInputDialog, 
-                             QStyle, QStyleFactory, QFrame, QSplitter, QMenu, QAction)
+                             QStyle, QStyleFactory, QFrame, QSplitter, QMenu, QAction, QListWidgetItem)
 from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5.QtGui import QIcon, QFont
 from appointmate.utils.appointment_manager import AppointmentManager
 from .appointment_dialog import AppointmentDialog
 from .search_dialog import SearchDialog
 from .edit_appointment_dialog import EditAppointmentDialog
-from config import APPOINTMENTS_FILE, ENCRYPTION_KEY
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -103,10 +102,13 @@ class MainWindow(QMainWindow):
         self.date_label.setText(date.toString("MMMM d, yyyy"))
         appointments = self.appointment_manager.get_appointments_by_date(date.toString("yyyy-MM-dd"))
         
-        for app_id, app in appointments.items():
-            item = QListWidget.Item(f"{app['time']} - {app['name']}: {app['reason']}")
-            item.setData(Qt.UserRole, app_id)
-            self.appointment_list.addItem(item)
+        if not appointments:
+            self.appointment_list.addItem("No appointments for this date")
+        else:
+            for app_id, app in appointments.items():
+                item = QListWidgetItem(f"{app['time']} - {app['name']}: {app['reason']}")
+                item.setData(Qt.UserRole, app_id)
+                self.appointment_list.addItem(item)
 
     def add_appointment(self):
         dialog = AppointmentDialog(self)
