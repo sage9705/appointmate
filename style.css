@@ -1,0 +1,148 @@
+@import url("bootstrap.min.css");
+
+/* Common button styles */
+QPushButton,
+.dialog QPushButton,
+.search-results-dialog .results-list .list-group-item,
+.search-button {
+    background-color: #007bff; 
+    color: #fff;
+    border: none;
+    border-radius: 25px; 
+    padding: 10px 20px; 
+    font-weight: bold; 
+    font-size: 1rem;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Style QPushButton on hover */
+QPushButton:hover {
+    background-color: #0056b3; /* Darker color on hover */
+}
+
+/* Style QMenuBar and items */
+QMenuBar {
+    background-color: #007bff;
+    color: #fff;
+}
+
+QMenuBar::item {
+    background-color: #007bff;
+    padding: 5px 10px;
+}
+
+QMenuBar::item:selected {
+    background-color: #0056b3;
+}
+
+/* Style QLineEdit and QTextEdit */
+QLineEdit,
+.dialog QLineEdit,
+.dialog QTextEdit {
+    background-color: #90E0EF;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    padding: 10px; 
+    margin: 10px;
+    font-size: 1rem;
+}
+
+/* Common dialog styles */
+.dialog {
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+/* Style the dialog title */
+.dialog QLabel {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Style the dialog body */
+.dialog .modal-body {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* Style the dialog footer */
+.dialog .modal-footer {
+    text-align: right;
+}
+
+
+.dialog QPushButton,
+.search-results-dialog .results-list .list-group-item.active,
+.search-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+}
+
+QMainWindow {
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.search-bar {
+    margin-bottom: 20px;
+}
+
+.search-input {
+    background-color: #fff;
+    border: 1px solid #007bff; 
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px;
+    font-size: 1rem; 
+}
+
+
+.calendar {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+
+.calendar-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.label {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Style the button */
+.button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Style button on hover */
+.button:hover {
+    background-color: #0056b3;
+}
